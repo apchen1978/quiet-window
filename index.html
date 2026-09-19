@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Quiet Window — a synthetic garage experiment</title>
+<style>
+  :root {
+    --paper: #f7f5ee;
+    --bone: #efe9db;
+    --ink: #18251f;
+    --forest: #234e3b;
+    --moss: #6a7f6a;
+    --amber: #d9a441;
+    --gold: #e8b45a;
+    --rust: #b45a3a;
+    --line: #dcd6c4;
+    --glass: #dfe8ea;
+    --sky: #d6e2e6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 20px 72px; }
+
+  .kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--amber); margin: 0 0 10px; }
+  h1 { font-family: ui-serif, Georgia, "Times New Roman", serif; font-size: clamp(30px, 6vw, 46px); line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 14px; font-weight: 700; }
+  .spark { font-family: ui-serif, Georgia, "Times New Roman", serif; font-size: clamp(17px, 3vw, 21px); color: var(--forest); font-style: italic; max-width: 36em; margin: 0 0 8px; }
+  .reframe { max-width: 40em; color: var(--moss); font-size: 14px; margin: 0 0 30px; }
+
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--rust);
+    border: 1px solid var(--rust); border-radius: 999px; padding: 3px 9px; margin-bottom: 20px;
+  }
+
+  .grid { display: grid; gap: 26px; }
+  @media (min-width: 760px) { .grid { grid-template-columns: 1fr 1fr; align-items: start; } }
+
+  .card { border: 1px solid var(--line); border-radius: 18px; background: #fffdf7; overflow: hidden; }
+
+  /* ---- room illustration ---- */
+  .room {
+    padding: 26px 26px 22px;
+    background: linear-gradient(180deg, #f2efe6, #e9e4d5);
+    border-bottom: 1px solid var(--line);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .stage { position: relative; width: 100%; max-width: 300px; height: 210px; }
+  .wall-note { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--moss); text-align: center; margin-bottom: 8px; }
+  .window {
+    position: absolute; top: 20px; bottom: 12px; left: 50%; width: 72%;
+    transform: translateX(-50%);
+    background: linear-gradient(160deg, var(--sky), var(--glass));
+    border: 10px solid var(--forest); border-radius: 4px;
+    box-shadow: inset 0 0 24px rgba(24,37,31,.18);
+    overflow: hidden;
+  }
+  .window::before, .window::after { content: ""; position: absolute; background: var(--forest); }
+  .window::before { left: 50%; top: 0; bottom: 0; width: 5px; transform: translateX(-50%); }
+  .window::after { left: 0; right: 0; top: 50%; height: 5px; transform: translateY(-50%); }
+  .glow {
+    position: absolute; top: 26px; bottom: 18px; left: calc(50% + 4px); width: 34%;
+    transform: translateX(-50%) skewX(-6deg);
+    background: rgba(255,255,255,.35); filter: blur(1px);
+  }
+  .curtain {
+    position: absolute; top: 14px; bottom: 8px;
+    width: 62%;
+    border-radius: 3px;
+    transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+    box-shadow: 0 10px 26px -14px rgba(24,37,31,.55);
+  }
+  .curtain.left { left: 6%; transform-origin: left center; }
+  .curtain.right { right: 6%; transform-origin: right center; }
+  .gap-hint {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--rust);
+    white-space: nowrap;
+  }
+
+  /* ---- levers ---- */
+  .controls { padding: 20px 26px 24px; }
+  .ctrl { margin-bottom: 18px; }
+  .ctrl:last-child { margin-bottom: 0; }
+  .ctrl .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .ctrl label { font-size: 13px; font-weight: 700; }
+  .ctrl label small { display: block; font-weight: 500; color: var(--moss); font-size: 11px; }
+  .ctrl .cost { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+  .cost.material { color: var(--rust); }
+  .cost.geometry { color: var(--forest); }
+  .ctrl input[type=range] { width: 100%; margin-top: 8px; accent-color: var(--amber); }
+
+  /* ---- potential readout ---- */
+  .spec { padding: 22px 26px 24px; }
+  .spec .label { font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--moss); margin: 0 0 4px; }
+  .spec .hint { font-size: 11px; color: var(--moss); margin: 0 0 14px; }
+  .meter { margin-bottom: 16px; }
+  .meter .top { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; }
+  .meter .track { height: 10px; border-radius: 999px; background: var(--bone); margin-top: 6px; overflow: hidden; }
+  .meter .fill { height: 100%; border-radius: 999px; background: var(--forest); transition: width .18s ease; }
+  .meter.warm .fill { background: var(--amber); }
+  .meter.shade .fill { background: var(--moss); }
+
+  .takeaway {
+    margin-top: 18px; border-top: 1px solid var(--line); padding-top: 16px;
+    font-family: ui-serif, Georgia, serif; font-size: 17px; font-weight: 700;
+    color: var(--forest); line-height: 1.35;
+  }
+
+  .insight {
+    margin-top: 14px; border-left: 2px solid var(--amber);
+    background: rgba(217,164,65,.07); padding: 12px 14px;
+    font-size: 13.5px; font-weight: 600; color: var(--ink); min-height: 20px;
+  }
+
+  .foot { margin-top: 26px; font-size: 11px; color: var(--moss); border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">Synthetic garage experiment</p>
+  <h1>The Quiet Window</h1>
+  <p class="spark">What if the next product isn't a new fabric — but a new way of specifying what you already make?</p>
+  <p class="reframe">A curtain is bought for color. But its experience might be decided by three things that have nothing to do with the cloth.</p>
+
+  <span class="badge">Illustrative · Synthetic · Not measured performance</span>
+
+  <div class="grid">
+    <div class="card">
+      <div class="room">
+        <p class="wall-note">one window, three levers</p>
+        <div class="stage" id="stage">
+          <div class="window"><div class="glow"></div></div>
+          <div class="curtain left" id="curtainL"></div>
+          <div class="curtain right" id="curtainR"></div>
+          <div class="gap-hint" id="gapHint"></div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="ctrl">
+          <div class="row">
+            <label>Fabric <small>the lever you'd reach for first</small></label>
+            <span class="cost material">material · costs money</span>
+          </div>
+          <input type="range" id="weight" min="0" max="100" value="40" />
+        </div>
+        <div class="ctrl">
+          <div class="row">
+            <label>Fullness <small>how folded the fabric hangs</small></label>
+            <span class="cost geometry">geometry · no new material</span>
+          </div>
+          <input type="range" id="fullness" min="0" max="100" value="30" />
+        </div>
+        <div class="ctrl">
+          <div class="row">
+            <label>Air gap <small>the space between fabric and glass</small></label>
+            <span class="cost geometry">installation · no new material</span>
+          </div>
+          <input type="range" id="gap" min="0" max="100" value="20" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="spec">
+        <p class="label">Illustrative comfort potential</p>
+        <p class="hint">A relationship, not a report. Index 0–100 · no dB, no R-value, no certification.</p>
+        <div class="meter">
+          <div class="top"><span>Quiet potential</span><span id="quietVal">0</span></div>
+          <div class="track"><div class="fill" id="quietFill"></div></div>
+        </div>
+        <div class="meter warm">
+          <div class="top"><span>Warmth potential</span><span id="warmVal">0</span></div>
+          <div class="track"><div class="fill" id="warmFill"></div></div>
+        </div>
+        <div class="meter shade">
+          <div class="top"><span>Shade potential</span><span id="shadeVal">0</span></div>
+          <div class="track"><div class="fill" id="shadeFill"></div></div>
+        </div>
+
+        <div class="takeaway" id="takeaway">Maybe we're optimizing the fabric when we should be designing the installation.</div>
+
+        <div class="insight" id="insight">Move a lever and watch what actually changes the potential.</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">Synthetic garage experiment — the values illustrate a relationship, not measured performance.
+  No acoustic testing · no thermal testing · no buyer validation · the variable relationship is a product hypothesis, not a result.</p>
+</div>
+
+<script>
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const $ = id => document.getElementById(id);
+
+  // Illustrative model only. Fabric is deliberately the weakest lever.
+  function compute(w, f, g) {
+    return {
+      quiet:  Math.round(clamp(22 + 0.12 * w + 0.42 * f + 0.30 * g, 4, 98)),
+      warmth: Math.round(clamp(18 + 0.08 * w + 0.36 * f + 0.44 * g, 4, 98)),
+      shade:  Math.round(clamp(30 + 0.16 * w + 0.40 * f + 0.08 * g, 8, 99)),
+    };
+  }
+
+  let lastMoved = null;
+
+  function render() {
+    const w = +$("weight").value;
+    const f = +$("fullness").value;
+    const g = +$("gap").value;
+    const s = compute(w, f, g);
+
+    $("quietVal").textContent = s.quiet;
+    $("warmVal").textContent = s.warmth;
+    $("shadeVal").textContent = s.shade;
+    $("quietFill").style.width = s.quiet + "%";
+    $("warmFill").style.width = s.warmth + "%";
+    $("shadeFill").style.width = s.shade + "%";
+
+    // ---- illustration ----
+    const foldCount = 2 + Math.round(f / 100 * 14);
+    const stripe = "repeating-linear-gradient(90deg, rgba(24,37,31,.16) 0 2px, transparent 2px " + (100 / foldCount) + "%)";
+    const curtainBg = "linear-gradient(90deg, hsl(38 30% " + (84 - w / 100 * 8) + "%), hsl(38 32% " + (78 - w / 100 * 8) + "%))";
+    for (const id of ["curtainL", "curtainR"]) {
+      const el = $(id);
+      el.style.background = curtainBg + ", " + stripe;
+      el.style.backgroundBlendMode = "multiply";
+      const lift = (g / 100) * 22;
+      el.style.boxShadow = "0 " + (10 + lift * 0.4) + "px " + (26 + lift) + "px -14px rgba(24,37,31," + (0.45 + g / 100 * 0.25) + ")";
+      el.style.width = (56 + (f / 100) * 12) + "%";
+    }
+    $("gapHint").textContent = "air gap ≈ " + Math.round(g / 100 * 14) + " cm";
+
+    const lines = {
+      weight:   "Thicker fabric barely moved it — and the material is the lever that costs money.",
+      fullness: "Fullness moved it more than the fabric did. It's geometry — no new material.",
+      gap:      "The air gap moved it most. It's installation geometry — the product was the space, not the cloth.",
+    };
+    $("insight").textContent = lines[lastMoved] || "Move a lever and watch what actually changes the potential.";
+  }
+
+  for (const id of ["weight", "fullness", "gap"]) {
+    $(id).addEventListener("input", () => { lastMoved = id; render(); });
+  }
+
+  render();
+</script>
+</body>
+</html>
