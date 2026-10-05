@@ -1,6 +1,6 @@
 ﻿# Quiet Window
 
-A synthetic garage experiment. The product was the space, not the cloth.
+A demo garage experiment. The product was the space, not the cloth.
 
 - **Illustrative only** — no measured acoustics or thermals.
 - One zero-dependency HTML file. Open index.html, or play the live demo.
